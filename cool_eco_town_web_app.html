@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쿨에코 타운 (Cool Eco Town) - 기후 대응 & 야외활동 안전 지킴이</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tomato: '#FF5733',
+                        'tomato-dark': '#C70039',
+                        ecogreen: '#10B981',
+                        coolteal: '#14B8A6',
+                        coolblue: '#0284C7'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F0FDF4;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-full shadow text-tomato text-xl">
+                    <i class="fa-solid font-bold fa-temperature-half"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg md:text-xl tracking-tight flex items-center gap-2">
+                        쿨에코 타운 <span class="text-xs bg-tomato text-white px-2 py-0.5 rounded-full font-normal">SDGs #13</span>
+                    </h1>
+                    <p class="text-xs text-emerald-100 hidden sm:block">토마토와 친구들 | 기후변화 대응 & 폭염 안전 시스템</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center space-x-1 sm:space-x-3 text-sm">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 font-medium transition">대시보드</button>
+                <button onclick="switchTab('recommendations')" id="nav-recommendations" class="px-3 py-1.5 rounded-lg hover:bg-white/20 font-medium transition">맞춤가이드</button>
+                <button onclick="switchTab('action')" id="nav-action" class="px-3 py-1.5 rounded-lg hover:bg-white/20 font-medium transition">탄소발자국</button>
+                <button onclick="switchTab('worker')" id="nav-worker" class="px-3 py-1.5 rounded-lg hover:bg-white/20 font-medium transition">야외근로자</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- Banner Announcement -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
+                <div>
+                    <p class="font-semibold text-amber-800 text-sm">실시간 폭염 주의 정보</p>
+                    <p class="text-xs text-amber-700">우리 동네 야외 온도가 매우 높습니다. 체육수업 및 야외작업 시 주 수분 섭취 및 휴식을 권장합니다.</p>
+                </div>
+            </div>
+            <button onclick="triggerEmergencyAlert()" class="bg-tomato hover:bg-tomato-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-truck-medical"></i> 온열질환 응급가이드
+            </button>
+        </div>
+
+        <!-- Section 1: Dashboard -->
+        <section id="sec-dashboard" class="space-y-6">
+            <!-- Top Controls & Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Weather Controls & Current Status -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-md border border-emerald-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-teal-600"></i> 환경 데이터 시뮬레이션
+                            </h2>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">실시간 연동 모드</span>
+                        </div>
+                        
+                        <!-- Temperature Slider -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <label class="font-medium text-slate-600">현재 외기 온도 (°C)</label>
+                                <span id="temp-val" class="font-bold text-tomato">33 °C</span>
+                            </div>
+                            <input type="range" id="temp-range" min="20" max="42" value="33" oninput="updateDashboard()" class="w-full accent-tomato cursor-pointer">
+                        </div>
+
+                        <!-- Humidity Slider -->
+                        <div class="mb-6">
+                            <div class="flex justify-between text-sm mb-1">
+                                <label class="font-medium text-slate-600">상대 습도 (%)</label>
+                                <span id="humidity-val" class="font-bold text-teal-600">65 %</span>
+                            </div>
+                            <input type="range" id="humidity-range" min="20" max="95" value="65" oninput="updateDashboard()" class="w-full accent-teal-600 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Computed Heat Index Display -->
+                    <div id="status-card" class="p-4 rounded-xl text-center transition-all bg-amber-500 text-white shadow-inner">
+                        <p class="text-xs font-medium uppercase tracking-wider opacity-90">체감 온도 / 안전 상태</p>
+                        <h3 id="feels-like-temp" class="text-3xl font-extrabold my-1">38.4 °C</h3>
+                        <p id="danger-level" class="text-sm font-bold bg-white/20 inline-block px-3 py-0.5 rounded-full">⚠️ 경고 (Warning)</p>
+                        <p id="danger-desc" class="text-xs mt-2 opacity-90">야외 활동을 자제하고 충분한 음용수를 섭취하세요.</p>
+                    </div>
+                </div>
+
+                <!-- Status Cards & Recommended Actions -->
+                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Student / School Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-md border border-emerald-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="bg-blue-100 p-2.5 rounded-xl text-coolblue">
+                                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                                </div>
+                                <span id="school-flag" class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">체육활동 제한</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base mb-1">학교 & 학생 안전 지침</h3>
+                            <p class="text-xs text-slate-500 mb-3">야외 체육 수업 및 쉬는 시간 운동장 활동 가이드라인</p>
+                            <ul id="school-tips" class="text-xs space-y-1.5 text-slate-600">
+                                <li class="flex items-center gap-1.5"><i class="fa-solid fa-check text-teal-500"></i> 야외 체육수업 실내 대체 (강당/교실)</li>
+                                <li class="flex items-center gap-1.5"><i class="fa-solid fa-check text-teal-500"></i> 매 교시 15분 마다 수분 섭취 지도</li>
+                            </ul>
+                        </div>
+                        <button onclick="switchTab('recommendations')" class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">대체 활동 보기</button>
+                    </div>
+
+                    <!-- Outdoor Workers Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-md border border-emerald-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="bg-amber-100 p-2.5 rounded-xl text-amber-600">
+                                    <i class="fa-solid fa-hard-hat text-xl"></i>
+                                </div>
+                                <span id="worker-flag" class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">휴식시간 필수</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base mb-1">야외 근로자 보호 지침</h3>
+                            <p class="text-xs text-slate-500 mb-3">건설/배달/길거리 정비 노동자 맞춤 안전 수칙</p>
+                            <ul id="worker-tips" class="text-xs space-y-1.5 text-slate-600">
+                                <li class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> 1시간 작업 후 15분 이상 그늘 휴식</li>
+                                <li class="flex items-center gap-1.5"><i class="fa-solid fa-glass-water text-teal-500"></i> 시원한 소금물 및 얼음물 비치</li>
+                            </ul>
+                        </div>
+                        <button onclick="switchTab('worker')" class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">근로자 스케줄러</button>
+                    </div>
+
+                    <!-- Hourly Heat Index Chart -->
+                    <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-md border border-emerald-100">
+                        <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center justify-between">
+                            <span><i class="fa-solid fa-chart-line text-emerald-600 mr-1"></i> 오늘 시간대별 체감온도 변화 추이</span>
+                            <span class="text-xs font-normal text-slate-400">12:00 ~ 16:00 최고위험군</span>
+                        </h3>
+                        <div class="h-44 w-full">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Safe Activity Recommendations & Cool Map -->
+        <section id="sec-recommendations" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-emerald-100">
+                <h2 class="font-bold text-xl text-slate-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-umbrella-beach text-coolteal"></i> 안전한 야외활동 & 시원한 쉼터 찾기
+                </h2>
+                <p class="text-xs text-slate-500 mb-6">폭염에도 안전하게 일상을 누릴 수 있는 실내 대체활동과 주변 Cool Shelter(무더위 쉼터) 정보입니다.</p>
+
+                <!-- Activity Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="border border-slate-200 rounded-xl p-4 hover:border-teal-500 transition bg-emerald-50/50">
+                        <div class="text-teal-600 mb-2"><i class="fa-solid fa-volleyball text-2xl"></i></div>
+                        <h4 class="font-bold text-sm text-slate-800">학생 실내 체육/동아리</h4>
+                        <p class="text-xs text-slate-600 mt-1">체육관 탁구, 배드민턴, VR 스포츠 체험관 및 실내 보드게임 활동</p>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl p-4 hover:border-teal-500 transition bg-blue-50/50">
+                        <div class="text-coolblue mb-2"><i class="fa-solid fa-book-open text-2xl"></i></div>
+                        <h4 class="font-bold text-sm text-slate-800">지역 주민 문화/휴식</h4>
+                        <p class="text-xs text-slate-600 mt-1">동네 도서관 폭염 피서, 주민센터 쿨링존, 실내 스마트 팜 카페 방문</p>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl p-4 hover:border-teal-500 transition bg-amber-50/50">
+                        <div class="text-amber-600 mb-2"><i class="fa-solid fa-route text-2xl"></i></div>
+                        <h4 class="font-bold text-sm text-slate-800">그늘진 이동 경로 추천</h4>
+                        <p class="text-xs text-slate-600 mt-1">가로수 그늘길, 쿨링포그(안개분사) 설치 구간, 지하보도 연결 통로 이용</p>
+                    </div>
+                </div>
+
+                <!-- Mock Cool Shelter Map/List -->
+                <div class="border border-slate-200 rounded-xl p-5 bg-slate-50">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-slate-800 text-sm">📍 우리 동네 실제 무더위 쉼터 현황 (노원·도봉 지역)</h3>
+                        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">실제 지자체 무더위 쉼터 5곳</span>
+                    </div>
+                    <div class="space-y-2.5">
+                        <!-- 1. 상계1동 주민센터 -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2 hover:border-teal-500 transition">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-slate-800 text-sm">상계1동 주민센터</span>
+                                    <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium">평일 09:00~18:00</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-1"><i class="fa-solid fa-location-dot text-tomato mr-1"></i>서울특별시 노원구 동일로 1697 | 📞 02-2116-2732</p>
+                                <div class="flex flex-wrap gap-1 text-[11px] text-slate-500">
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">❄️ 에어컨 가동</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">💧 정수기/음수대</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">🪑 휴게 의자/책상</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">🩹 응급구호물품</span>
+                                </div>
+                            </div>
+                            <div class="text-right sm:self-center">
+                                <span class="text-xs text-teal-600 font-bold bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block">약 300m</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. 도봉1동 주민센터 -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2 hover:border-teal-500 transition">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-slate-800 text-sm">도봉1동 주민센터</span>
+                                    <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium">평일 09:00~18:00</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-1"><i class="fa-solid fa-location-dot text-tomato mr-1"></i>서울특별시 도봉구 도봉로169길 46 | 📞 02-2091-5060</p>
+                                <div class="flex flex-wrap gap-1 text-[11px] text-slate-500">
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">❄️ 에어컨 가동</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">💧 시원한 음수대</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">🪑 주민 휴게 공간</span>
+                                </div>
+                            </div>
+                            <div class="text-right sm:self-center">
+                                <span class="text-xs text-teal-600 font-bold bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block">약 700m</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. 도봉2동 주민센터 -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2 hover:border-teal-500 transition">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-slate-800 text-sm">도봉2동 주민센터</span>
+                                    <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium">평일 09:00~18:00</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-1"><i class="fa-solid fa-location-dot text-tomato mr-1"></i>서울특별시 도봉구 마들로 668 | 📞 02-2091-5080</p>
+                                <div class="flex flex-wrap gap-1 text-[11px] text-slate-500">
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">❄️ 쿨링존 운영</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">💧 식수 공급</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">혈압측정기 비치</span>
+                                </div>
+                            </div>
+                            <div class="text-right sm:self-center">
+                                <span class="text-xs text-teal-600 font-bold bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block">약 1.2km</span>
+                            </div>
+                        </div>
+
+                        <!-- 4. 상계8동 주민센터 -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2 hover:border-teal-500 transition">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-slate-800 text-sm">상계8동 주민센터</span>
+                                    <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium">평일 09:00~18:00</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-1"><i class="fa-solid fa-location-dot text-tomato mr-1"></i>서울특별시 노원구 동일로227길 97 | 📞 02-2116-2894</p>
+                                <div class="flex flex-wrap gap-1 text-[11px] text-slate-500">
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">❄️ 에어컨 가동</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">💧 정수기 비치</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">📰 신문/도서 소장</span>
+                                </div>
+                            </div>
+                            <div class="text-right sm:self-center">
+                                <span class="text-xs text-teal-600 font-bold bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block">약 1.5km</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. 창5동 주민센터 -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2 hover:border-teal-500 transition">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-slate-800 text-sm">창5동 주민센터</span>
+                                    <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium">평일 09:00~18:00</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-1"><i class="fa-solid fa-location-dot text-tomato mr-1"></i>서울특별시 도봉구 창동 | 📞 02-2091-5122</p>
+                                <div class="flex flex-wrap gap-1 text-[11px] text-slate-500">
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">❄️ 무더위 쉼터지정</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">💧 냉음수대</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded">🚑 기본 응급약품</span>
+                                </div>
+                            </div>
+                            <div class="text-right sm:self-center">
+                                <span class="text-xs text-teal-600 font-bold bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block">약 2.7km</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Action Plan & Carbon Reduction Tracker -->
+        <section id="sec-action" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-emerald-100">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                    <div>
+                        <h2 class="font-bold text-xl text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-leaf text-ecogreen"></i> 기후변화 대응 실천 & 탄소 감축 트래커
+                        </h2>
+                        <p class="text-xs text-slate-500">작은 실천이 기후변화를 막습니다! 우리의 활동으로 감축한 CO2량을 기록해보세요.</p>
+                    </div>
+                    <div class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-xl text-right">
+                        <span class="text-xs block font-medium">우리 팀 누적 CO2 감축량</span>
+                        <span id="total-co2" class="text-xl font-extrabold">12.5 kg</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Checklist -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
+                        <h3 class="font-bold text-slate-800 text-sm mb-3">🌱 오늘 내가 한 기후 행동</h3>
+                        <div class="space-y-2 text-xs">
+                            <label class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-emerald-100 cursor-pointer hover:bg-emerald-50">
+                                <input type="checkbox" onchange="addCarbon(0.5, this)" class="accent-ecogreen w-4 h-4">
+                                <span>텀블러/개인 컵 사용하기 (+0.5kg CO2)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-emerald-100 cursor-pointer hover:bg-emerald-50">
+                                <input type="checkbox" onchange="addCarbon(1.2, this)" class="accent-ecogreen w-4 h-4">
+                                <span>등하교/출퇴근 시 자전거나 도보 이용 (+1.2kg CO2)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-emerald-100 cursor-pointer hover:bg-emerald-50">
+                                <input type="checkbox" onchange="addCarbon(0.8, this)" class="accent-ecogreen w-4 h-4">
+                                <span>에어컨 설정온도 26°C 이상 유지 (+0.8kg CO2)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 bg-white p-2.5 rounded-lg border border-emerald-100 cursor-pointer hover:bg-emerald-50">
+                                <input type="checkbox" onchange="addCarbon(2.0, this)" class="accent-ecogreen w-4 h-4">
+                                <span>동네 반려식물/나무 가꾸기 참여 (+2.0kg CO2)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Community Target Card -->
+                    <div class="bg-teal-50/60 p-4 rounded-xl border border-teal-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-2">🎯 토마토와 친구들 이번 주 목표</h3>
+                            <p class="text-xs text-slate-600 mb-3">학교 주변 그늘막 설치 건의 및 나무 50그루 심기 캠페인 진행 중</p>
+                            <div class="w-full bg-slate-200 rounded-full h-3 mb-2">
+                                <div class="bg-teal-600 h-3 rounded-full" style="width: 68%;"></div>
+                            </div>
+                            <p class="text-xs text-right text-teal-700 font-bold">목표 달성률 68%</p>
+                        </div>
+                        <button onclick="alert('기후 선언문 참여 작성이 완료되었습니다! 지속 가능한 동네를 함께 만들어요.')" class="w-full mt-3 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs transition">
+                            기후 서약 서명하기 ✍️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Outdoor Worker Protection -->
+        <section id="sec-worker" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-emerald-100">
+                <h2 class="font-bold text-xl text-slate-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-500"></i> 야외 근로자 폭염 안전 맞춤 서비스
+                </h2>
+                <p class="text-xs text-slate-500 mb-6">택배기사, 건설현장 근로자, 환경미화원 등 폭염에 직접 노출되는 야외 근로자의 건강권을 보호합니다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Timer / Rest Scheduler -->
+                    <div class="border border-amber-200 bg-amber-50/40 p-5 rounded-xl">
+                        <h3 class="font-bold text-amber-800 text-sm mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-amber-600"></i> 작업-휴식 주기 알람 타이머
+                        </h3>
+                        <p class="text-xs text-slate-600 mb-4">현재 폭염 단계에서는 45분 작업 후 15분 휴식이 법적 권장 사항입니다.</p>
+                        <div class="text-center py-4 bg-white rounded-xl border border-amber-200 mb-4">
+                            <span id="timer-display" class="text-3xl font-mono font-bold text-slate-800">45:00</span>
+                            <p class="text-xs text-slate-400 mt-1">남은 권장 작업 시간</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="startTimer()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-xs font-bold transition">타이머 시작</button>
+                            <button onclick="resetTimer()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition">리셋</button>
+                        </div>
+                    </div>
+
+                    <!-- Safety Checklist for Employers/Workers -->
+                    <div class="border border-slate-200 p-5 rounded-xl bg-slate-50">
+                        <h3 class="font-bold text-slate-800 text-sm mb-3">📋 현장 필수 안전 체크리스트</h3>
+                        <div class="space-y-2 text-xs">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="accent-amber-500 w-4 h-4" checked>
+                                <span>작업장 근처 햇빛을 가릴 수 있는 그늘막 확보</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="accent-amber-500 w-4 h-4" checked>
+                                <span>시원하고 깨끗한 물 및 염분(식소금) 비치</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="accent-amber-500 w-4 h-4">
+                                <span>통풍이 잘되는 작업복 및 통기성 쿨토시 착용</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="accent-amber-500 w-4 h-4">
+                                <span>2인 1조 작업 진행 (동료 상태 상호 관찰)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Emergency Checklist Modal -->
+    <div id="modal-emergency" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border-2 border-tomato">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-tomato flex items-center gap-2">
+                    <i class="fa-solid fa-kit-medical"></i> 온열질환 긴급 자가진단 및 응급처치
+                </h3>
+                <button onclick="closeEmergencyModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-600 mb-4">의식 상태와 증상을 체크하고 필요 시 즉시 119에 신고하세요.</p>
+
+            <div class="space-y-2 text-xs mb-4">
+                <div class="p-2.5 bg-red-50 rounded-lg border border-red-200">
+                    <span class="font-bold text-red-800">🚨 열사병 위험 증상 (즉시 119!)</span>
+                    <p class="text-slate-600 mt-0.5">의식 혼미, 높은 체온(40°C 이상), 땀이 나지 않고 건조하며 뜨거운 피부</p>
+                </div>
+                <div class="p-2.5 bg-amber-50 rounded-lg border border-amber-200">
+                    <span class="font-bold text-amber-800">⚠️ 열탈진 증상</span>
+                    <p class="text-slate-600 mt-0.5">극심한 피로, 두통, 어지러움, 과도한 땀 흘림, 근육 경련</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 p-3 rounded-xl mb-4 text-xs space-y-1">
+                <span class="font-bold text-slate-800">💡 현장 응급처치 순서:</span>
+                <p>1. 즉시 시원한 그늘이나 실내로 이동</p>
+                <p>2. 옷을 느슨하게 하고 부채질 또는 선풍기로 체온 낮추기</p>
+                <p>3. 의식이 있을 때만 차가운 물 천천히 마시기</p>
+            </div>
+
+            <div class="flex gap-2">
+                <a href="tel:119" class="flex-1 bg-tomato hover:bg-tomato-dark text-white font-bold py-2.5 rounded-xl text-center text-xs flex items-center justify-center gap-2 shadow">
+                    <i class="fa-solid fa-phone"></i> 119 즉시 전화 연결
+                </a>
+                <button onclick="closeEmergencyModal()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 py-6 text-xs border-t border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                <p class="font-bold text-slate-200">쿨에코 타운 (Cool Eco Town) | 토마토와 친구들</p>
+                <p class="mt-0.5">UN Sustainable Development Goals #13 Climate Action</p>
+            </div>
+            <div class="text-slate-500 text-center sm:text-right">
+                <p>🔒 개인정보 수집 없음 | 주민·학생·야외근로자 누구나 이용 가능</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        let currentCO2 = 12.5;
+        let timerInterval = null;
+        let timerSeconds = 45 * 60;
+
+        // Initialize Chart
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const tempChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'],
+                datasets: [{
+                    label: '예상 체감온도 (°C)',
+                    data: [28, 32, 38, 39, 34, 29],
+                    borderColor: '#FF5733',
+                    backgroundColor: 'rgba(255, 87, 51, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { min: 20, max: 45 }
+                }
+            }
+        });
+
+        // Dashboard Calculator Logic
+        function updateDashboard() {
+            const temp = parseFloat(document.getElementById('temp-range').value);
+            const humidity = parseFloat(document.getElementById('humidity-range').value);
+
+            document.getElementById('temp-val').innerText = temp + ' °C';
+            document.getElementById('humidity-val').innerText = humidity + ' %';
+
+            // Simple Heat Index Approximation Formula
+            const feelsLike = temp + (0.33 * (humidity / 100 * 6.105 * Math.exp((17.27 * temp) / (237.7 + temp)))) - 4;
+            const roundedFeelsLike = feelsLike.toFixed(1);
+
+            document.getElementById('feels-like-temp').innerText = roundedFeelsLike + ' °C';
+
+            const statusCard = document.getElementById('status-card');
+            const dangerLevel = document.getElementById('danger-level');
+            const dangerDesc = document.getElementById('danger-desc');
+            const schoolFlag = document.getElementById('school-flag');
+            const workerFlag = document.getElementById('worker-flag');
+
+            if (feelsLike < 30) {
+                statusCard.className = 'p-4 rounded-xl text-center transition-all bg-emerald-500 text-white shadow-inner';
+                dangerLevel.innerText = '🟢 안전 (Safe)';
+                dangerDesc.innerText = '야외활동에 적절한 날씨입니다. 수분 보충을 잊지 마세요.';
+                schoolFlag.innerText = '정상 야외활동';
+                schoolFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700';
+                workerFlag.innerText = '정상 작업 가능';
+                workerFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700';
+            } else if (feelsLike < 35) {
+                statusCard.className = 'p-4 rounded-xl text-center transition-all bg-amber-500 text-white shadow-inner';
+                dangerLevel.innerText = '⚠️ 주의 (Caution)';
+                dangerDesc.innerText = '야외활동 시 주기적인 휴식과 수분 섭취가 필요합니다.';
+                schoolFlag.innerText = '야외활동 자제';
+                schoolFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700';
+                workerFlag.innerText = '15분 그늘 휴식';
+                workerFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700';
+            } else {
+                statusCard.className = 'p-4 rounded-xl text-center transition-all bg-tomato text-white shadow-inner animate-pulse';
+                dangerLevel.innerText = '🚨 위험 (Extreme)';
+                dangerDesc.innerText = '야외 활동 중단 권고! 온열질환 발생 위험이 매우 높습니다.';
+                schoolFlag.innerText = '야외체육 금지';
+                schoolFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700';
+                workerFlag.innerText = '작업 중단 및 휴식';
+                workerFlag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700';
+            }
+        }
+
+        // Navigation Tabs
+        function switchTab(tabName) {
+            ['dashboard', 'recommendations', 'action', 'worker'].forEach(tab => {
+                document.getElementById(`sec-${tab}`).classList.add('hidden');
+                document.getElementById(`nav-${tab}`).classList.remove('bg-white/20');
+            });
+            document.getElementById(`sec-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).classList.add('bg-white/20');
+        }
+
+        // Carbon Footprint Tracker
+        function addCarbon(amount, checkbox) {
+            if (checkbox.checked) {
+                currentCO2 += amount;
+            } else {
+                currentCO2 -= amount;
+            }
+            document.getElementById('total-co2').innerText = currentCO2.toFixed(1) + ' kg';
+        }
+
+        // Emergency Modal Logic
+        function triggerEmergencyAlert() {
+            document.getElementById('modal-emergency').classList.remove('hidden');
+        }
+
+        function closeEmergencyModal() {
+            document.getElementById('modal-emergency').classList.add('hidden');
+        }
+
+        // Worker Timer Logic
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                    const s = (timerSeconds % 60).toString().padStart(2, '0');
+                    document.getElementById('timer-display').innerText = `${m}:${s}`;
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    alert('⏰ 작업 45분이 경과했습니다! 시원한 그늘에서 15분간 휴식을 취하세요.');
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = 45 * 60;
+            document.getElementById('timer-display').innerText = '45:00';
+        }
+
+        // Initial Load
+        updateDashboard();
+    </script>
+</body>
+</html>
